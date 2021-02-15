@@ -1,0 +1,64 @@
+version: "3"
+
+services:
+
+  couchdb1.couchnet.local:
+    container_name: couchdb1.couchnet.local
+    image: couchdb:3.1.1
+    command: -setcookie thecookie
+    environment:
+      - "COUCHDB_USER=${COUCHDB_USER:-admin}"
+      - "COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-password}"
+      - "COUCHDB_SECRET=${COUCHDB_SECRET:-123456}"
+      - "NODENAME=couchdb1.couchnet.local"
+    restart: always
+    networks:
+      couchnet:
+
+  couchdb2.couchnet.local:
+    container_name: couchdb2.couchnet.local
+    image: couchdb:3.1.1
+    command: -setcookie thecookie
+    environment:
+      - "COUCHDB_USER=${COUCHDB_USER:-admin}"
+      - "COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-password}"
+      - "COUCHDB_SECRET=${COUCHDB_SECRET:-123456}"
+      - "NODENAME=couchdb2.couchnet.local"
+    restart: always
+    networks:
+      couchnet:
+
+  couchdb3.couchnet.local:
+    container_name: couchdb3.couchnet.local
+    image: couchdb:3.1.1
+    command: -setcookie thecookie
+    environment:
+      - "COUCHDB_USER=${COUCHDB_USER:-admin}"
+      - "COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-password}"
+      - "COUCHDB_SECRET=${COUCHDB_SECRET:-123456}"
+      - "NODENAME=couchdb3.couchnet.local"
+    restart: always
+    networks:
+      couchnet:
+
+  cluster-setup:
+    depends_on:
+      - couchdb1.couchnet.local
+      - couchdb2.couchnet.local
+      - couchdb3.couchnet.local
+    # image: python:3-alpine
+    build: .
+    container_name: couchdb_admin
+    command: bash -c "sleep 5 && python /usr/local/bin/clusterize.py -q 6 -n 1 --admin admin --password password couchdb1.couchnet.local couchdb2.couchnet.local couchdb3.couchnet.local"
+    volumes:
+      - ./clusterize.py:/usr/local/bin/clusterize.py:ro
+    networks:
+      couchnet:
+
+networks:
+  couchnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.31.241.64/29"
